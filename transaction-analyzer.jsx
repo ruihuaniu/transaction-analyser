@@ -2,7 +2,6 @@ import React, {
   useState,
   useMemo,
   useCallback,
-  useRef,
   useEffect,
 } from "react";
 import {
@@ -1127,7 +1126,6 @@ function UploadScreen({ onData, dark, toggleDark }) {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef();
   const th = makeTheme(dark);
 
   const processFile = useCallback(
@@ -1275,7 +1273,7 @@ function UploadScreen({ onData, dark, toggleDark }) {
         </p>
       </div>
 
-      <div
+      <label
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -1286,7 +1284,6 @@ function UploadScreen({ onData, dark, toggleDark }) {
           setDragging(false);
           processFile(e.dataTransfer.files[0]);
         }}
-        onClick={() => inputRef.current?.click()}
         style={{
           position: "relative",
           width: "100%",
@@ -1299,23 +1296,20 @@ function UploadScreen({ onData, dark, toggleDark }) {
           background: dragging ? th.accentDim : th.bgCard,
           transition: "all 0.2s",
           boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          display: "block",
         }}
       >
         <input
-          ref={inputRef}
           type='file'
-          accept='.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          accept='.csv,.xlsx,.xls'
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             width: "100%",
             height: "100%",
             opacity: 0,
             cursor: "pointer",
-            pointerEvents: "none",
+            pointerEvents: "auto",
             zIndex: 1,
           }}
           onChange={(e) => {
