@@ -1301,7 +1301,7 @@ function UploadScreen({ onData, dark, toggleDark }) {
       >
         <input
           type='file'
-          accept='.csv,.xlsx,.xls'
+          accept='.csv,text/csv,application/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xls,application/vnd.ms-excel'
           style={{
             position: "absolute",
             inset: 0,
