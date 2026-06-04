@@ -165,6 +165,19 @@ function parseDateStr(val) {
       Number(ymdMatch[3]),
     );
   }
+
+  // Support AU-style day/month/year dates like 01/04/2025.
+  const dmyMatch = /^([0-9]{1,2})[\/\-]([0-9]{1,2})[\/\-]([0-9]{2,4})$/u.exec(
+    str,
+  );
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    let year = Number(dmyMatch[3]);
+    if (year < 100) year += 2000;
+    return new Date(year, month - 1, day);
+  }
+
   const d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -1449,9 +1462,9 @@ function Dashboard({ transactions, onReset, dark, toggleDark }) {
 
     const net = totalReceived - totalSpent;
     const categories = Object.values(catMap).sort((a, b) => b.debit - a.debit);
-    const monthly = Object.values(monthMap)
-      .sort((a, b) => a.month.localeCompare(b.month))
-      .slice(-12);
+    const monthly = Object.values(monthMap).sort((a, b) =>
+      a.month.localeCompare(b.month),
+    );
 
     const merchants = Object.values(merchantMap)
       .map((m) => ({
@@ -2234,195 +2247,6 @@ function Dashboard({ transactions, onReset, dark, toggleDark }) {
               </div>
             </div>
 
-            {/* Row 2: horizontal bar — full width */}
-            <div
-              style={{
-                background: th.bgCard,
-                border: `1px solid ${th.border}`,
-                borderRadius: 16,
-                padding: "20px 20px 12px",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-              }}
-            >
-              <div style={{ fontWeight: 700, fontSize: 15, color: th.text }}>
-                Top Spending Categories
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: th.textMuted,
-                  marginTop: 2,
-                  marginBottom: 12,
-                }}
-              >
-                Total debit amount per category
-              </div>
-              <ResponsiveContainer
-                width='100%'
-                height={Math.max(
-                  180,
-                  Math.min(
-                    stats.categories.filter((c) => c.debit > 0).length,
-                    10,
-                  ) * 36,
-                )}
-              >
-                <BarChart
-                  data={stats.categories
-                    .filter((c) => c.debit > 0)
-                    .slice(0, 10)}
-                  layout='vertical'
-                  margin={{ top: 4, right: 60, left: 8, bottom: 4 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray='3 3'
-                    stroke={th.chartGrid}
-                    horizontal={false}
-                  />
-                  <XAxis
-                    type='number'
-                    tick={{ fill: th.chartTick, fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                  />
-                  <YAxis
-                    type='category'
-                    dataKey='label'
-                    tick={{ fill: th.text, fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={120}
-                  />
-                  <Tooltip content={<ChartTooltip {...ctProps} />} />
-                  <Bar dataKey='debit' name='Spent' radius={[0, 6, 6, 0]}>
-                    {stats.categories
-                      .filter((c) => c.debit > 0)
-                      .slice(0, 10)
-                      .map((_, i) => (
-                        <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                      ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* ── Top Merchants (bar chart + table) ── */}
-            <div
-              style={{
-                background: th.bgCard,
-                border: `1px solid ${th.border}`,
-                borderRadius: 16,
-                padding: "20px 20px 24px",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 16,
-                      color: th.text,
-                    }}
-                  >
-                    Top Merchants
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: th.textMuted,
-                      marginTop: 2,
-                    }}
-                  >
-                    Top 10 merchants by spend, plus a full merchant visit and
-                    spend table.
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: th.textMuted,
-                    minWidth: 180,
-                    textAlign: "right",
-                  }}
-                >
-                  {stats.topMerchants.length} merchants shown in chart ·{" "}
-                  {stats.merchants.length.toLocaleString()} merchants total
-                </div>
-              </div>
-
-              <div style={{ marginTop: 18 }}>
-                <ResponsiveContainer width='100%' height={420}>
-                  <BarChart
-                    data={stats.topMerchants}
-                    layout='vertical'
-                    margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray='3 3'
-                      stroke={th.chartGrid}
-                      horizontal={false}
-                    />
-                    <XAxis
-                      type='number'
-                      tick={{ fill: th.chartTick, fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    />
-                    <YAxis
-                      type='category'
-                      dataKey='merchant'
-                      tick={{ fill: th.text, fontSize: 12 }}
-                      tickFormatter={(value) =>
-                        String(value).length > 24
-                          ? `${String(value).slice(0, 24).trim()}…`
-                          : value
-                      }
-                      tickLine={false}
-                      axisLine={false}
-                      width={180}
-                    />
-                    <Tooltip content={<ChartTooltip {...ctProps} />} />
-                    <Bar dataKey='spent' name='Spend' radius={[0, 6, 6, 0]}>
-                      {stats.topMerchants.map((_, i) => (
-                        <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div style={{ marginTop: 24 }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: th.textMuted,
-                    marginBottom: 12,
-                  }}
-                >
-                  Merchant spend and visit summary
-                </div>
-                <DataTable
-                  data={stats.merchants}
-                  columns={merchantColumns}
-                  th={th}
-                />
-              </div>
-            </div>
-
             {/* ── Row 3: Monthly Spending (bar + line) ── */}
             <div
               style={{
@@ -2684,6 +2508,79 @@ function Dashboard({ transactions, onReset, dark, toggleDark }) {
                 })()}
             </div>
 
+            {/* Row 2: horizontal bar — full width */}
+            <div
+              style={{
+                background: th.bgCard,
+                border: `1px solid ${th.border}`,
+                borderRadius: 16,
+                padding: "20px 20px 12px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 15, color: th.text }}>
+                Top Spending Categories
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: th.textMuted,
+                  marginTop: 2,
+                  marginBottom: 12,
+                }}
+              >
+                Total debit amount per category
+              </div>
+              <ResponsiveContainer
+                width='100%'
+                height={Math.max(
+                  180,
+                  Math.min(
+                    stats.categories.filter((c) => c.debit > 0).length,
+                    10,
+                  ) * 36,
+                )}
+              >
+                <BarChart
+                  data={stats.categories
+                    .filter((c) => c.debit > 0)
+                    .slice(0, 10)}
+                  layout='vertical'
+                  margin={{ top: 4, right: 60, left: 8, bottom: 4 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    stroke={th.chartGrid}
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type='number'
+                    tick={{ fill: th.chartTick, fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                  />
+                  <YAxis
+                    type='category'
+                    dataKey='label'
+                    tick={{ fill: th.text, fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={120}
+                  />
+                  <Tooltip content={<ChartTooltip {...ctProps} />} />
+                  <Bar dataKey='debit' name='Spent' radius={[0, 6, 6, 0]}>
+                    {stats.categories
+                      .filter((c) => c.debit > 0)
+                      .slice(0, 10)
+                      .map((_, i) => (
+                        <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                      ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
             {/* Category summary table */}
             <div
               style={{
@@ -2718,6 +2615,122 @@ function Dashboard({ transactions, onReset, dark, toggleDark }) {
                   },
                 })}
               />
+            </div>
+
+            {/* ── Top Merchants (bar chart + table) ── */}
+            <div
+              style={{
+                background: th.bgCard,
+                border: `1px solid ${th.border}`,
+                borderRadius: 16,
+                padding: "20px 20px 24px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 16,
+                      color: th.text,
+                    }}
+                  >
+                    Top Merchants
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: th.textMuted,
+                      marginTop: 2,
+                    }}
+                  >
+                    Top 10 merchants by spend, plus a full merchant visit and
+                    spend table.
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: th.textMuted,
+                    minWidth: 180,
+                    textAlign: "right",
+                  }}
+                >
+                  {stats.topMerchants.length} merchants shown in chart ·{" "}
+                  {stats.merchants.length.toLocaleString()} merchants total
+                </div>
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                <ResponsiveContainer width='100%' height={420}>
+                  <BarChart
+                    data={stats.topMerchants}
+                    layout='vertical'
+                    margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray='3 3'
+                      stroke={th.chartGrid}
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type='number'
+                      tick={{ fill: th.chartTick, fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                    />
+                    <YAxis
+                      type='category'
+                      dataKey='merchant'
+                      tick={{ fill: th.text, fontSize: 12 }}
+                      tickFormatter={(value) =>
+                        String(value).length > 24
+                          ? `${String(value).slice(0, 24).trim()}…`
+                          : value
+                      }
+                      tickLine={false}
+                      axisLine={false}
+                      width={180}
+                    />
+                    <Tooltip content={<ChartTooltip {...ctProps} />} />
+                    <Bar dataKey='spent' name='Spend' radius={[0, 6, 6, 0]}>
+                      {stats.topMerchants.map((_, i) => (
+                        <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: th.textMuted,
+                    marginBottom: 12,
+                  }}
+                >
+                  Merchant spend and visit summary
+                </div>
+                <DataTable
+                  data={stats.merchants}
+                  columns={merchantColumns}
+                  th={th}
+                />
+              </div>
             </div>
 
             {/* ── Key Observations ── */}
