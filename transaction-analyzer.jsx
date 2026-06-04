@@ -1315,6 +1315,7 @@ function UploadScreen({ onData, dark, toggleDark }) {
             height: "100%",
             opacity: 0,
             cursor: "pointer",
+            pointerEvents: "none",
             zIndex: 1,
           }}
           onChange={(e) => {
