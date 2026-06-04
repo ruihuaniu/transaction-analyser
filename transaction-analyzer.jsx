@@ -1275,6 +1275,7 @@ function UploadScreen({ onData, dark, toggleDark }) {
         }}
         onClick={() => inputRef.current?.click()}
         style={{
+          position: "relative",
           width: "100%",
           maxWidth: 500,
           border: `2px dashed ${dragging ? th.accent : th.borderStrong}`,
@@ -1290,9 +1291,24 @@ function UploadScreen({ onData, dark, toggleDark }) {
         <input
           ref={inputRef}
           type='file'
-          accept='.csv,.xlsx,.xls'
-          style={{ display: "none" }}
-          onChange={(e) => processFile(e.target.files[0])}
+          accept='.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            cursor: "pointer",
+            zIndex: 1,
+          }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) processFile(file);
+            e.target.value = "";
+          }}
         />
         {loading ? (
           <div style={{ color: th.accent, fontSize: 15 }}>
