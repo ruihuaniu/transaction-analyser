@@ -1351,7 +1351,7 @@ function UploadScreen({ onData, dark, toggleDark }) {
             </div>
           </>
         )}
-      </div>
+      </label>
       {error && (
         <div
           style={{
