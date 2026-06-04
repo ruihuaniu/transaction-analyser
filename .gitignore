@@ -1,4 +1,6 @@
 *.csv
 *Report*.html
+*.py
 
 node_modules
+dist
